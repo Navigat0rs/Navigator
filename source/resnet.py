@@ -156,84 +156,84 @@ def train(args, **kwargs):
     train_losses_all, val_losses_all = [], []
 
     # Get the initial loss.
-    init_train_targ, init_train_pred = run_test(network, train_loader, device, eval_mode=False)
+    # init_train_targ, init_train_pred = run_test(network, train_loader, device, eval_mode=False)
 
-    init_train_loss = np.mean((init_train_targ - init_train_pred) ** 2, axis=0)
-    train_losses_all.append(np.mean(init_train_loss))
-    print('-------------------------')
-    print('Init: average loss: {}/{:.6f}'.format(init_train_loss, train_losses_all[-1]))
-    if summary_writer is not None:
-        add_summary(summary_writer, init_train_loss, 0, 'train')
-
-    if val_loader is not None:
-        init_val_targ, init_val_pred = run_test(network, val_loader, device)
-        init_val_loss = np.mean((init_val_targ - init_val_pred) ** 2, axis=0) #np.mean([[1,2],[3,4]]) = [2,3]
-        val_losses_all.append(np.mean(init_val_loss)) #np.mean([2,3]) = 5
-        print('Validation loss: {}/{:.6f}'.format(init_val_loss, val_losses_all[-1]))
-        if summary_writer is not None:
-            add_summary(summary_writer, init_val_loss, 0, 'val')
-
-    try:
-        for epoch in range(start_epoch, args.epochs):
-            start_t = time.time()
-            network.train()  #according to my understanding its just change the mode of the network to train mode
-            train_outs, train_targets = [], []
-            for batch_id, (feat, targ, _, _) in enumerate(train_loader):
-                feat, targ = feat.to(device), targ.to(device)
-                optimizer.zero_grad()
-                pred = network(feat)  #in book this is like y=mx+c
-                train_outs.append(pred.cpu().detach().numpy())  #.cpu mean move all the parameters and buffer to the cpu, returning  self
-                train_targets.append(targ.cpu().detach().numpy())
-                loss = criterion(pred, targ)  #MSE Loss = [1,2,3,4]
-                loss = torch.mean(loss) #loss=2.5
-                loss.backward()
-                optimizer.step()
-                step += 1
-            train_outs = np.concatenate(train_outs, axis=0) #axis 0 means a=[[1,2],[3,4]] b=[3,4], concatenate a,b in axis 0 mean [[1,2],[3,4],[3,4]]
-            train_targets = np.concatenate(train_targets, axis=0)
-            train_losses = np.average((train_outs - train_targets) ** 2, axis=0) #already Criterion(MSE loss) calculated why redo this?
-
-            end_t = time.time()
-            print('-------------------------')
-            print('Epoch {}, time usage: {:.3f}s, average loss: {}/{:.6f}'.format(
-                epoch, end_t - start_t, train_losses, np.average(train_losses)))
-            train_losses_all.append(np.average(train_losses))
-
-            if summary_writer is not None:
-                add_summary(summary_writer, train_losses, epoch + 1, 'train')
-                summary_writer.add_scalar('optimizer/lr', optimizer.param_groups[0]['lr'], epoch)
-
-            if val_loader is not None:
-                network.eval()  #now network change from train mode to evalutation mode
-                val_outs, val_targets = run_test(network, val_loader, device)  #better to see the implementation, it pass the features to the network and get predicted outcomes and return that outcome with target outcome
-                val_losses = np.average((val_outs - val_targets) ** 2, axis=0)
-                avg_loss = np.average(val_losses)
-                print('Validation loss: {}/{:.6f}'.format(val_losses, avg_loss))
-                scheduler.step(avg_loss)
-                if summary_writer is not None:
-                    add_summary(summary_writer, val_losses, epoch + 1, 'val')
-                val_losses_all.append(avg_loss)
-                if avg_loss < best_val_loss:  #initial best_val_loss is infinity
-                    best_val_loss = avg_loss
-                    if args.out_dir and osp.isdir(args.out_dir):
-                        model_path = osp.join(args.out_dir, 'checkpoints', 'checkpoint_%d.pt' % epoch)
-                        torch.save({'model_state_dict': network.state_dict(),
-                                    'epoch': epoch,
-                                    'optimizer_state_dict': optimizer.state_dict()}, model_path)
-                        print('Model saved to ', model_path)
-            else:
-                if args.out_dir is not None and osp.isdir(args.out_dir):
-                    model_path = osp.join(args.out_dir, 'checkpoints', 'checkpoint_%d.pt' % epoch)
-                    torch.save({'model_state_dict': network.state_dict(),
-                                'epoch': epoch,
-                                'optimizer_state_dict': optimizer.state_dict()}, model_path)
-                    print('Model saved to ', model_path)
-
-            total_epoch = epoch
-
-    except KeyboardInterrupt:
-        print('-' * 60)
-        print('Early terminate')
+    # init_train_loss = np.mean((init_train_targ - init_train_pred) ** 2, axis=0)
+    # train_losses_all.append(np.mean(init_train_loss))
+    # print('-------------------------')
+    # print('Init: average loss: {}/{:.6f}'.format(init_train_loss, train_losses_all[-1]))
+    # if summary_writer is not None:
+    #     add_summary(summary_writer, init_train_loss, 0, 'train')
+    #
+    # if val_loader is not None:
+    #     init_val_targ, init_val_pred = run_test(network, val_loader, device)
+    #     init_val_loss = np.mean((init_val_targ - init_val_pred) ** 2, axis=0) #np.mean([[1,2],[3,4]]) = [2,3]
+    #     val_losses_all.append(np.mean(init_val_loss)) #np.mean([2,3]) = 5
+    #     print('Validation loss: {}/{:.6f}'.format(init_val_loss, val_losses_all[-1]))
+    #     if summary_writer is not None:
+    #         add_summary(summary_writer, init_val_loss, 0, 'val')
+    #
+    # try:
+    #     for epoch in range(start_epoch, args.epochs):
+    #         start_t = time.time()
+    #         network.train()  #according to my understanding its just change the mode of the network to train mode
+    #         train_outs, train_targets = [], []
+    #         for batch_id, (feat, targ, _, _) in enumerate(train_loader):
+    #             feat, targ = feat.to(device), targ.to(device)
+    #             optimizer.zero_grad()
+    #             pred = network(feat)  #in book this is like y=mx+c
+    #             train_outs.append(pred.cpu().detach().numpy())  #.cpu mean move all the parameters and buffer to the cpu, returning  self
+    #             train_targets.append(targ.cpu().detach().numpy())
+    #             loss = criterion(pred, targ)  #MSE Loss = [1,2,3,4]
+    #             loss = torch.mean(loss) #loss=2.5
+    #             loss.backward()
+    #             optimizer.step()
+    #             step += 1
+    #         train_outs = np.concatenate(train_outs, axis=0) #axis 0 means a=[[1,2],[3,4]] b=[3,4], concatenate a,b in axis 0 mean [[1,2],[3,4],[3,4]]
+    #         train_targets = np.concatenate(train_targets, axis=0)
+    #         train_losses = np.average((train_outs - train_targets) ** 2, axis=0) #already Criterion(MSE loss) calculated why redo this?
+    #
+    #         end_t = time.time()
+    #         print('-------------------------')
+    #         print('Epoch {}, time usage: {:.3f}s, average loss: {}/{:.6f}'.format(
+    #             epoch, end_t - start_t, train_losses, np.average(train_losses)))
+    #         train_losses_all.append(np.average(train_losses))
+    #
+    #         if summary_writer is not None:
+    #             add_summary(summary_writer, train_losses, epoch + 1, 'train')
+    #             summary_writer.add_scalar('optimizer/lr', optimizer.param_groups[0]['lr'], epoch)
+    #
+    #         if val_loader is not None:
+    #             network.eval()  #now network change from train mode to evalutation mode
+    #             val_outs, val_targets = run_test(network, val_loader, device)  #better to see the implementation, it pass the features to the network and get predicted outcomes and return that outcome with target outcome
+    #             val_losses = np.average((val_outs - val_targets) ** 2, axis=0)
+    #             avg_loss = np.average(val_losses)
+    #             print('Validation loss: {}/{:.6f}'.format(val_losses, avg_loss))
+    #             scheduler.step(avg_loss)
+    #             if summary_writer is not None:
+    #                 add_summary(summary_writer, val_losses, epoch + 1, 'val')
+    #             val_losses_all.append(avg_loss)
+    #             if avg_loss < best_val_loss:  #initial best_val_loss is infinity
+    #                 best_val_loss = avg_loss
+    #                 if args.out_dir and osp.isdir(args.out_dir):
+    #                     model_path = osp.join(args.out_dir, 'checkpoints', 'checkpoint_%d.pt' % epoch)
+    #                     torch.save({'model_state_dict': network.state_dict(),
+    #                                 'epoch': epoch,
+    #                                 'optimizer_state_dict': optimizer.state_dict()}, model_path)
+    #                     print('Model saved to ', model_path)
+    #         else:
+    #             if args.out_dir is not None and osp.isdir(args.out_dir):
+    #                 model_path = osp.join(args.out_dir, 'checkpoints', 'checkpoint_%d.pt' % epoch)
+    #                 torch.save({'model_state_dict': network.state_dict(),
+    #                             'epoch': epoch,
+    #                             'optimizer_state_dict': optimizer.state_dict()}, model_path)
+    #                 print('Model saved to ', model_path)
+    #
+    #         total_epoch = epoch
+    #
+    # except KeyboardInterrupt:
+    #     print('-' * 60)
+    #     print('Early terminate')
 
     print('Training complete')
     if args.out_dir:
@@ -279,7 +279,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    np.set_printoptions(formatter={'all': lambda x: '{:.6f}'.format(x)})
+    # np.set_printoptions(formatter={'all': lambda x: '{:.6f}'.format(x)})
 
     if args.mode == 'train':
         train(args)

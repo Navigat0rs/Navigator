@@ -44,53 +44,53 @@ class GlobSpeedSequence(CompiledSequence):
 
         with h5py.File(osp.join(data_path, 'data.hdf5')) as f:
             gyro_uncalib = f['synced/gyro_uncalib']  #for angular velocity
-            # print("Gyro uncalib: ",gyro_uncalib)
+            print("Gyro uncalib: ",gyro_uncalib)
             acce_uncalib = f['synced/acce']  # for accelaration
-            # print("acce_uncalib: ",acce_uncalib)
+            print("acce_uncalib: ",acce_uncalib)
             gyro = gyro_uncalib - np.array(self.info['imu_init_gyro_bias'])
-            # print("gyro calibrated: ",gyro)
+            print("gyro calibrated: ",gyro)
             acce = np.array(self.info['imu_acce_scale']) * (acce_uncalib - np.array(self.info['imu_acce_bias']))
-            # print("accelaration_calibrated: ",acce)
+            print("accelaration_calibrated: ",acce)
             ts = np.copy(f['synced/time'])
-            # print("timeseries: ",ts)
+            print("timeseries: ",ts)
             tango_pos = np.copy(f['pose/tango_pos'])
-            # print("tango_pos: ",tango_pos)
+            print("tango_pos: ",tango_pos)
             init_tango_ori = quaternion.quaternion(*f['pose/tango_ori'][0])  #first
-            # print("initial_tango_orientation: ",init_tango_ori)
+            print("initial_tango_orientation: ",init_tango_ori)
 
         #Compute the IMU orientation in the Tango coordinate frame. #shanmu - may be global
         print("------------Compute the IMU orientation in the Tango coordinate frame------------------------")
-        # print("ori: ",ori)
+        print("ori: ",ori)
         ori_q = quaternion.from_float_array(ori)
-        # print(type(ori_q))
-        # print("orietation_quaternion: ",ori_q)
+        print(type(ori_q))
+        print("orietation_quaternion: ",ori_q)
         rot_imu_to_tango = quaternion.quaternion(*self.info['start_calibration'])
-        # print("Rot_imu_to_tango_quaternion",rot_imu_to_tango)
+        print("Rot_imu_to_tango_quaternion",rot_imu_to_tango)
         init_rotor = init_tango_ori * rot_imu_to_tango * ori_q[0].conj()
-        # print("initial_rotor: ",init_rotor)
+        print("initial_rotor: ",init_rotor)
         ori_q = init_rotor * ori_q
-        # print("orientation_quaternion: ",ori_q)
+        print("orientation_quaternion: ",ori_q)
 
         dt = (ts[self.w:] - ts[:-self.w])[:, None]
-        # print("dt: ",dt)
+        print("dt: ",dt)
         glob_v = (tango_pos[self.w:] - tango_pos[:-self.w]) / dt
-        # print("global_velocity: ", glob_v)
+        print("global_velocity: ", glob_v)
 
         gyro_q = quaternion.from_float_array(np.concatenate([np.zeros([gyro.shape[0], 1]), gyro], axis=1))
-        # print("gyro_quaternion: ",gyro_q)
+        print("gyro_quaternion: ",gyro_q)
         acce_q = quaternion.from_float_array(np.concatenate([np.zeros([acce.shape[0], 1]), acce], axis=1))
-        # print("acce_quaterion: ",acce_q)
+        print("acce_quaterion: ",acce_q)
         glob_gyro = quaternion.as_float_array(ori_q * gyro_q * ori_q.conj())[:, 1:]
-        # print("global_gyro: ",glob_gyro)
+        print("global_gyro: ",glob_gyro)
         glob_acce = quaternion.as_float_array(ori_q * acce_q * ori_q.conj())[:, 1:]
-        # print("global_accelation: ",glob_acce)
+        print("global_accelation: ",glob_acce)
 
         start_frame = self.info.get('start_frame', 0)
         self.ts = ts[start_frame:]
         self.features = np.concatenate([glob_gyro, glob_acce], axis=1)[start_frame:]
-        # print("-------features: ",self.features)
+        print("-------features: ",self.features)
         self.targets = glob_v[start_frame:, :2]
-        # print("--------global_targets: ",self.targets)
+        print("--------global_targets: ",self.targets)
         self.orientations = quaternion.as_float_array(ori_q)[start_frame:]
         self.gt_pos = tango_pos[start_frame:]
 
