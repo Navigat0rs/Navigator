@@ -37,6 +37,9 @@ def get_model(arch):
         raise ValueError('Invalid architecture: ', args.arch)
     return network
 
+def contrastiveModule(input_array):
+    #TODO: add functionalities for contrastive module
+    return input_array
 
 def run_test(network, data_loader, device, eval_mode=True):
     targets_all = []
@@ -134,6 +137,7 @@ def train(args, **kwargs):
     print('Total number of parameters: ', total_params)
 
     criterion = torch.nn.MSELoss()
+    criterion_2=torch.nn.MSELoss()
     optimizer = torch.optim.Adam(network.parameters(), args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, verbose=True, eps=1e-12)
 
@@ -180,13 +184,22 @@ def train(args, **kwargs):
             train_outs, train_targets = [], []
             for batch_id, (feat, targ, _, _) in enumerate(train_loader):
                 feat, targ = feat.to(device), targ.to(device)
+                feat_c=contrastiveModule(feat) #format[[glob_ang_vel_c1,glob_acc_c1],[],...]
+                v_1=network(feat)
+                v_2=network(feat_c)
+                v_1_c=contrastiveModule(v_1)
+
+                contrastive_loss=criterion_2(v_1_c,v_2)
+                contrastive_loss=torch.mean(contrastive_loss)
+
                 optimizer.zero_grad()
                 pred = network(feat)  #in book this is like y=mx+c
                 train_outs.append(pred.cpu().detach().numpy())  #.cpu mean move all the parameters and buffer to the cpu, returning  self
                 train_targets.append(targ.cpu().detach().numpy())
-                loss = criterion(pred, targ)  #MSE Loss = [1,2,3,4]
+                loss = criterion(v_1, targ)  #MSE Loss = [1,2,3,4]
                 loss = torch.mean(loss) #loss=2.5
-                loss.backward()
+                total_loss=loss+contrastive_loss
+                total_loss.backward()
                 optimizer.step()
                 step += 1
             train_outs = np.concatenate(train_outs, axis=0) #axis 0 means a=[[1,2],[3,4]] b=[3,4], concatenate a,b in axis 0 mean [[1,2],[3,4],[3,4]]
