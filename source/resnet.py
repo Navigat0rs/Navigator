@@ -215,19 +215,6 @@ def train(args, **kwargs):
                 val_losses_all.append(avg_loss)
                 if avg_loss < best_val_loss:  #initial best_val_loss is infinity
                     best_val_loss = avg_loss
-                    if args.out_dir and osp.isdir(args.out_dir):
-                        model_path = osp.join(args.out_dir, 'checkpoints', 'checkpoint_%d.pt' % epoch)
-                        torch.save({'model_state_dict': network.state_dict(),
-                                    'epoch': epoch,
-                                    'optimizer_state_dict': optimizer.state_dict()}, model_path)
-                        print('Model saved to ', model_path)
-            else:
-                if args.out_dir is not None and osp.isdir(args.out_dir):
-                    model_path = osp.join(args.out_dir, 'checkpoints', 'checkpoint_%d.pt' % epoch)
-                    torch.save({'model_state_dict': network.state_dict(),
-                                'epoch': epoch,
-                                'optimizer_state_dict': optimizer.state_dict()}, model_path)
-                    print('Model saved to ', model_path)
 
             total_epoch = epoch
 
