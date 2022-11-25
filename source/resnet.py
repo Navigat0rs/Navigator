@@ -215,19 +215,6 @@ def train(args, **kwargs):
                 val_losses_all.append(avg_loss)
                 if avg_loss < best_val_loss:  #initial best_val_loss is infinity
                     best_val_loss = avg_loss
-                    if args.out_dir and osp.isdir(args.out_dir):
-                        model_path = osp.join(args.out_dir, 'checkpoints', 'checkpoint_%d.pt' % epoch)
-                        torch.save({'model_state_dict': network.state_dict(),
-                                    'epoch': epoch,
-                                    'optimizer_state_dict': optimizer.state_dict()}, model_path)
-                        print('Model saved to ', model_path)
-            else:
-                if args.out_dir is not None and osp.isdir(args.out_dir):
-                    model_path = osp.join(args.out_dir, 'checkpoints', 'checkpoint_%d.pt' % epoch)
-                    torch.save({'model_state_dict': network.state_dict(),
-                                'epoch': epoch,
-                                'optimizer_state_dict': optimizer.state_dict()}, model_path)
-                    print('Model saved to ', model_path)
 
             total_epoch = epoch
 
@@ -264,7 +251,7 @@ if __name__ == '__main__':
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
     parser.add_argument('--lr', type=float, default=1e-04) #learning rate
     parser.add_argument('--batch_size', type=int, default=128)
-    parser.add_argument('--epochs', type=int, default=1000)
+    parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--arch', type=str, default='resnet18')
     parser.add_argument('--cpu', action='store_true')
     parser.add_argument('--run_ekf', action='store_true')
