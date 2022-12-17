@@ -262,11 +262,12 @@ def train(args, **kwargs):
                         print('Model saved to ', model_path)
             else:
                 if args.out_dir is not None and osp.isdir(args.out_dir):
-                    model_path = osp.join(args.out_dir, 'checkpoints', 'checkpoint_%d.pt' % epoch)
-                    torch.save({'model_state_dict': network.state_dict(),
-                                'epoch': epoch,
-                                'optimizer_state_dict': optimizer.state_dict()}, model_path)
-                    print('Model saved to ', model_path)
+                    if (epoch%10==0):
+                        model_path = osp.join(args.out_dir, 'checkpoints', 'checkpoint_%d.pt' % epoch)
+                        torch.save({'model_state_dict': network.state_dict(),
+                                    'epoch': epoch,
+                                    'optimizer_state_dict': optimizer.state_dict()}, model_path)
+                        print('Model saved to ', model_path)
 
             total_epoch = epoch
 
