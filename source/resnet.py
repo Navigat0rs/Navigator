@@ -47,11 +47,14 @@ def contrastiveModule(input_arrayy):
     for i in range (len(input_array)):
         w,x,y,z=0.0,input_array[i][0],input_array[i][1],0.0
         interm=[w,x.tolist(),y.tolist(),z]
+        intermm=[x.tolist(),y.tolist(),z]
         # print(interm)
         interm_q=quaternion.from_float_array(interm)
-        q1=quaternion.from_float_array([0.369969745324723, 0.629673216173061, 0.363760369952464, -0.578197723777012])
+        # q1=quaternion.from_float_array([0.369969745324723, 0.629673216173061, 0.363760369952464, -0.578197723777012])
+        q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / 2)
         # print(q1)
-        new_f = quaternion.as_float_array(q1 * interm_q * q1.conj())[1:3]
+        new_f=q1.rotate(intermm)[:-1]
+        # new_f = quaternion.as_float_array(q1 * interm_q * q1.conj())[1:3]
         input_array[i]=torch.tensor(new_f)
     # input_array.to("cuda:0")
     # print(input_array)
@@ -211,20 +214,20 @@ def train(args, **kwargs):
 
                 optimizer.zero_grad()
                 v_1 = network(feat)  #in book this is like y=mx+c
-                # v_2 = network(feat_c)
+                v_2 = network(feat_c)
                 v_1_c = contrastiveModule(targ)
                 v_1_c.to(device)
                 train_outs.append(v_1.cpu().detach().numpy())  #.cpu mean move all the parameters and buffer to the cpu, returning  self
                 train_targets.append(targ.cpu().detach().numpy())
                 v_1_c_all.append(v_1_c.cpu().detach().numpy())
-                # v_2_all.append(v_2.cpu().detach().numpy())
+                v_2_all.append(v_2.cpu().detach().numpy())
                 loss = criterion(v_1, targ)  #MSE Loss = [1,2,3,4]
-                # v_2=v_2.cpu()
+                v_2=v_2.cpu()
                 v_1_c=v_1_c.to('cpu')
-                # loss_2=criterion_2(v_2,v_1_c)
+                loss_2=criterion_2(v_2,v_1_c)
                 loss = torch.mean(loss) #loss=2.5
-                # loss_2=torch.mean(loss_2)
-                total_loss=loss
+                loss_2=torch.mean(loss_2)
+                total_loss=loss+loss_2
                 total_loss.backward()
                 optimizer.step()
                 step += 1
