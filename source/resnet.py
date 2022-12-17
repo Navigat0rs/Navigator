@@ -56,6 +56,7 @@ def contrastiveModule(input_arrayy):
         new_f=q1.rotate(intermm)[:-1]
         # new_f = quaternion.as_float_array(q1 * interm_q * q1.conj())[1:3]
         input_array[i]=torch.tensor(new_f)
+
     # input_array.to("cuda:0")
     # print(input_array)
 

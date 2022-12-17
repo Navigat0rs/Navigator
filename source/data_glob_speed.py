@@ -99,7 +99,6 @@ class GlobSpeedSequence(CompiledSequence):
         glob_acce_contrastive=[q1.rotate(l2) for l2 in glob_acce]
         # glob_acce_contrastive=quaternion.as_float_array(q1*ori_q * acce_q * ori_q.conj()*q1.conj())[:,1:]
         # print("global_accelation: ",glob_acce)
-
         start_frame = self.info.get('start_frame', 0)
         self.ts = ts[start_frame:]
         self.features = np.concatenate([glob_gyro, glob_acce], axis=1)[start_frame:]
