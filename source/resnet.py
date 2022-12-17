@@ -211,19 +211,19 @@ def train(args, **kwargs):
 
                 optimizer.zero_grad()
                 v_1 = network(feat)  #in book this is like y=mx+c
-                v_2 = network(feat_c)
+                # v_2 = network(feat_c)
                 v_1_c = contrastiveModule(targ)
                 v_1_c.to(device)
                 train_outs.append(v_1.cpu().detach().numpy())  #.cpu mean move all the parameters and buffer to the cpu, returning  self
                 train_targets.append(targ.cpu().detach().numpy())
                 v_1_c_all.append(v_1_c.cpu().detach().numpy())
-                v_2_all.append(v_2.cpu().detach().numpy())
+                # v_2_all.append(v_2.cpu().detach().numpy())
                 loss = criterion(v_1, targ)  #MSE Loss = [1,2,3,4]
-                v_2=v_2.cpu()
+                # v_2=v_2.cpu()
                 v_1_c=v_1_c.to('cpu')
-                loss_2=criterion_2(v_2,v_1_c)
+                # loss_2=criterion_2(v_2,v_1_c)
                 loss = torch.mean(loss) #loss=2.5
-                loss_2=torch.mean(loss_2)
+                # loss_2=torch.mean(loss_2)
                 total_loss=loss
                 total_loss.backward()
                 optimizer.step()
