@@ -158,7 +158,7 @@ def train(args, **kwargs):
     print('Total number of parameters: ', total_params)
 
     criterion = torch.nn.MSELoss()
-    criterion_2=torch.nn.MSELoss()
+    criterion_2=torch.nn.CosineSimilarity()
     optimizer = torch.optim.Adam(network.parameters(), args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, verbose=True, eps=1e-12)
 
@@ -228,7 +228,7 @@ def train(args, **kwargs):
                 loss_2=criterion_2(v_2,v_1_c)
                 loss = torch.mean(loss) #loss=2.5
                 loss_2=torch.mean(loss_2)
-                total_loss=loss+loss_2
+                total_loss=loss-loss_2
                 total_loss.backward()
                 optimizer.step()
                 step += 1
