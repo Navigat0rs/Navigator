@@ -233,13 +233,13 @@ def train(args, **kwargs):
                 optimizer.step()
                 step += 1
 
-                print("--------v_2--------------")
-                print(v_2)
-                print("--------v_1_c--------------")
-                print(v_1_c)
-                print("--------v_1--------------")
-                print(v_1)
-                print(loss_2)
+                # print("--------v_2--------------")
+                # print(v_2)
+                # print("--------v_1_c--------------")
+                # print(v_1_c)
+                # print("--------v_1--------------")
+                # print(v_1)
+                # print(loss_2)
 
             train_outs = np.concatenate(train_outs, axis=0) #axis 0 means a=[[1,2],[3,4]] b=[3,4], concatenate a,b in axis 0 mean [[1,2],[3,4],[3,4]]
             train_targets = np.concatenate(train_targets, axis=0)
