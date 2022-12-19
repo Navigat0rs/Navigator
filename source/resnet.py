@@ -159,7 +159,7 @@ def train(args, **kwargs):
 
     criterion = torch.nn.MSELoss()
     criterion_2=torch.nn.CosineSimilarity()
-    optimizer = torch.optim.Adam(network.parameters(), args.lr)
+    optimizer = torch.optim.SGD(network.parameters(), args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, verbose=True, eps=1e-12)
 
     start_epoch = 0
@@ -232,6 +232,15 @@ def train(args, **kwargs):
                 total_loss.backward()
                 optimizer.step()
                 step += 1
+
+                print("--------v_2--------------")
+                print(v_2)
+                print("--------v_1_c--------------")
+                print(v_1_c)
+                print("--------v_1--------------")
+                print(v_1)
+                print(loss_2)
+
             train_outs = np.concatenate(train_outs, axis=0) #axis 0 means a=[[1,2],[3,4]] b=[3,4], concatenate a,b in axis 0 mean [[1,2],[3,4],[3,4]]
             train_targets = np.concatenate(train_targets, axis=0)
             train_losses = np.average((train_outs - train_targets) ** 2, axis=0) #already Criterion(MSE loss) calculated why redo this?
