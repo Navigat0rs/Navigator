@@ -216,7 +216,7 @@ def train(args, **kwargs):
                 optimizer.zero_grad()
                 v_1 = network(feat)  #in book this is like y=mx+c
                 v_2 = network(feat_c)
-                v_1_c = contrastiveModule(targ)
+                v_1_c = contrastiveModule(v_1)
                 v_1_c.to(device)
                 train_outs.append(v_1.cpu().detach().numpy())  #.cpu mean move all the parameters and buffer to the cpu, returning  self
                 train_targets.append(targ.cpu().detach().numpy())
