@@ -159,7 +159,7 @@ def train(args, **kwargs):
 
     criterion = torch.nn.MSELoss()
     criterion_2=torch.nn.CosineSimilarity()
-    optimizer = torch.optim.SGD(network.parameters(), args.lr)
+    optimizer = torch.optim.Adam(network.parameters(), args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, verbose=True, eps=1e-12)
 
     start_epoch = 0
