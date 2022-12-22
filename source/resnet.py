@@ -40,7 +40,7 @@ def get_model(arch):
 
 def contrastiveModule(input_arrayy,device):
     # input_array=input_arrayy.cpu()
-    input_array=input_arrayy
+    input_array=input_arrayy.clone().detach()
     #TODO: add functionalities for contrastive module
     tensor1 = torch.tensor((), dtype=torch.float32,requires_grad=True,device=device)
     tensor1.new_zeros((len(input_array), len(input_array[0])))
@@ -52,11 +52,11 @@ def contrastiveModule(input_arrayy,device):
         # print(interm)
         interm_q=quaternion.from_float_array(interm)
         # q1=quaternion.from_float_array([0.369969745324723, 0.629673216173061, 0.363760369952464, -0.578197723777012])
-        q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / 2)
+        q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / (2*45))
         # print(q1)
         new_f=q1.rotate(intermm)[:-1]
         # new_f = quaternion.as_float_array(q1 * interm_q * q1.conj())[1:3]
-        input_array[i]=torch.tensor(new_f)
+        input_array[i]=torch.tensor(new_f,device=device)
 
         # zz=1
         # if (zz!=2):
@@ -164,7 +164,8 @@ def train(args, **kwargs):
     print('Total number of parameters: ', total_params)
 
     criterion = torch.nn.MSELoss()
-    criterion_2=torch.nn.CosineEmbeddingLoss()
+    criterion_2=torch.nn.CosineSimilarity(dim=1)
+    criterion_3=torch.nn.MSELoss()
     optimizer = torch.optim.Adam(network.parameters(), args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, verbose=True, eps=1e-12)
 
@@ -226,8 +227,8 @@ def train(args, **kwargs):
                 # v_1_c.to(device)
                 train_outs.append(v_1.cpu().detach().numpy())  #.cpu mean move all the parameters and buffer to the cpu, returning  self
                 train_targets.append(targ.cpu().detach().numpy())
-                v_1_c_all.append(v_1_c.cpu().detach().numpy())
-                v_2_all.append(v_2.cpu().detach().numpy())
+                # v_1_c_all.append(v_1_c.cpu().detach().numpy())
+                # v_2_all.append(v_2.cpu().detach().numpy())
                 loss = criterion(v_1, targ)  #MSE Loss = [1,2,3,4]
                 # v_2=v_2.cpu()
                 # v_1_c=v_1_c.to('cpu')
@@ -236,18 +237,27 @@ def train(args, **kwargs):
                 # v_1_c.to(device)
                 # print("v_1_c", v_1_c)
 
-                loss_2=criterion_2(v_2,v_1_c,torch.ones(len(v_2),device=device))
+                # loss_2=criterion_2(v_2,v_1_c,torch.ones(len(v_2),device=device))
+                # loss_3=criterion_3(v_2,v_1_c)
+                ol=(criterion_2(v_1_c, v_2))
+                # print("shape v_1_c: ",v_1_c.shape,"  shape v_2: ",v_2.shape," shape ol: ",ol.shape)
+                # print("length of contrastive loss",len(ol))
+                # print(v_1_c[2],v_2[2],ol[2])
+                loss_2 = torch.mean(ol)
+
+                loss_2 = 1 - loss_2
                 loss = torch.mean(loss) #loss=2.5
                 loss_2=torch.mean(loss_2)
-                loss=loss+loss_2
-                loss.backward()
+                # loss_3=torch.mean(loss_3)
+                total_loss=loss+loss_2
+                total_loss.backward()
                 optimizer.step()
                 step += 1
 
                 # print("--------v_2--------------")
                 # print(v_2)
                 # print("--------v_1_c--------------")
-                # print(loss_2,loss)
+                # print(loss,loss_2,total_loss)
                 # for j in range(len(v_1)):
                 #     print([v_1_c[j],v_2[j]])
                 #     zz=torch.nn.CosineSimilarity()
