@@ -103,6 +103,12 @@ class GlobSpeedSequence(CompiledSequence):
         self.ts = ts[start_frame:]
         self.features = np.concatenate([glob_gyro, glob_acce], axis=1)[start_frame:]
         self.features_contrastive=np.concatenate([glob_gyro_contrastive,glob_acce_contrastive],axis=1)[start_frame:]
+
+        # zz=0
+        # if (zz!=2):
+        #     for i in range (len(self.features)):
+        #         print([self.features[i],self.features_contrastive[i]])
+        #         z=2
         # print("-------features: ",self.features)
         self.targets = glob_v[start_frame:, :2]
         self.targets_contrastive=glob_v_contrastive[start_frame:,:2]

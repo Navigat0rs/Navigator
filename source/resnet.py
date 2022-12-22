@@ -38,10 +38,11 @@ def get_model(arch):
         raise ValueError('Invalid architecture: ', args.arch)
     return network
 
-def contrastiveModule(input_arrayy):
-    input_array=input_arrayy.cpu()
+def contrastiveModule(input_arrayy,device):
+    # input_array=input_arrayy.cpu()
+    input_array=input_arrayy
     #TODO: add functionalities for contrastive module
-    tensor1 = torch.tensor((), dtype=torch.float32)
+    tensor1 = torch.tensor((), dtype=torch.float32,requires_grad=True,device=device)
     tensor1.new_zeros((len(input_array), len(input_array[0])))
 
     for i in range (len(input_array)):
@@ -56,6 +57,11 @@ def contrastiveModule(input_arrayy):
         new_f=q1.rotate(intermm)[:-1]
         # new_f = quaternion.as_float_array(q1 * interm_q * q1.conj())[1:3]
         input_array[i]=torch.tensor(new_f)
+
+        # zz=1
+        # if (zz!=2):
+        #     print([intermm,input_array[i]])
+        #     zz=2
 
     # input_array.to("cuda:0")
     # print(input_array)
@@ -158,7 +164,7 @@ def train(args, **kwargs):
     print('Total number of parameters: ', total_params)
 
     criterion = torch.nn.MSELoss()
-    criterion_2=torch.nn.CosineSimilarity()
+    criterion_2=torch.nn.CosineEmbeddingLoss()
     optimizer = torch.optim.Adam(network.parameters(), args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, verbose=True, eps=1e-12)
 
@@ -207,36 +213,46 @@ def train(args, **kwargs):
                 feat, targ,feat_c,targ_c = feat.to(device), targ.to(device),feat_c.to(device), targ_c.to(device)
                 # feat_c=contrastiveModule(feat) #format[[glob_ang_vel_c1,glob_acc_c1],[],...]
 
-                v_1_c=contrastiveModule(targ)
-                v_1_c.to(device)
-
-                # contrastive_loss=criterion_2(v_1_c,v_2)
-                # contrastive_loss=torch.mean(contrastive_loss)
-
+                # v_1_c=contrastiveModule(targ)
+                # v_1_c.to(device)
+                #
+                # # contrastive_loss=criterion_2(v_1_c,v_2)
+                # # contrastive_loss=torch.mean(contrastive_loss)
+                #
                 optimizer.zero_grad()
                 v_1 = network(feat)  #in book this is like y=mx+c
                 v_2 = network(feat_c)
-                v_1_c = contrastiveModule(v_1)
-                v_1_c.to(device)
+                v_1_c = contrastiveModule(v_1,device)
+                # v_1_c.to(device)
                 train_outs.append(v_1.cpu().detach().numpy())  #.cpu mean move all the parameters and buffer to the cpu, returning  self
                 train_targets.append(targ.cpu().detach().numpy())
                 v_1_c_all.append(v_1_c.cpu().detach().numpy())
                 v_2_all.append(v_2.cpu().detach().numpy())
                 loss = criterion(v_1, targ)  #MSE Loss = [1,2,3,4]
-                v_2=v_2.cpu()
-                v_1_c=v_1_c.to('cpu')
-                loss_2=criterion_2(v_2,v_1_c)
+                # v_2=v_2.cpu()
+                # v_1_c=v_1_c.to('cpu')
+                # v_2.to(device)
+                # print("v_2",v_2)
+                # v_1_c.to(device)
+                # print("v_1_c", v_1_c)
+
+                loss_2=criterion_2(v_2,v_1_c,torch.ones(len(v_2),device=device))
                 loss = torch.mean(loss) #loss=2.5
                 loss_2=torch.mean(loss_2)
-                total_loss=loss-loss_2
-                total_loss.backward()
+                loss=loss+loss_2
+                loss.backward()
                 optimizer.step()
                 step += 1
 
                 # print("--------v_2--------------")
                 # print(v_2)
                 # print("--------v_1_c--------------")
-                # print(v_1_c)
+                # print(loss_2,loss)
+                # for j in range(len(v_1)):
+                #     print([v_1_c[j],v_2[j]])
+                #     zz=torch.nn.CosineSimilarity()
+                    # print(zz(torch.Tensor(torch.Tensor.tolist([v_2[j]])),torch.Tensor(torch.Tensor.tolist([v_1_c[j]]))))
+
                 # print("--------v_1--------------")
                 # print(v_1)
                 # print(loss_2)
