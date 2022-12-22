@@ -80,7 +80,7 @@ class GlobSpeedSequence(CompiledSequence):
         print(len(glob_v))
         glob_v_q=quaternion.from_float_array(np.concatenate([np.zeros([glob_v.shape[0], 1]), glob_v], axis=1))
         # glob_v_contrastive=quaternion.as_float_array(ori_q[200:] * glob_v_q * ori_q[200:].conj())[:, 1:]
-        glob_v_contrastive=glob_v_q
+        glob_v_contrastive=quaternion.as_float_array(glob_v_q)[:,1:]
         # print("global_velocity: ", glob_v)
 
         gyro_q = quaternion.from_float_array(np.concatenate([np.zeros([gyro.shape[0], 1]), gyro], axis=1))
