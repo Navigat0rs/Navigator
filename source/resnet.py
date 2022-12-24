@@ -16,6 +16,7 @@ from data_glob_speed import *
 from transformations import *
 from metric import compute_ate_rte
 from model_resnet1d import *
+from numpy import linalg as LA
 
 _input_channel, _output_channel = 6, 2
 _fc_config = {'fc_dim': 512, 'in_dim': 7, 'dropout': 0.5, 'trans_planes': 128}
@@ -239,15 +240,24 @@ def train(args, **kwargs):
 
                 # loss_2=criterion_2(v_2,v_1_c,torch.ones(len(v_2),device=device))
                 # loss_3=criterion_3(v_2,v_1_c)
-                ol=(criterion_2(v_1_c, v_2))
+
+                # ol=(criterion_2(v_1_c, v_2))
                 # print("shape v_1_c: ",v_1_c.shape,"  shape v_2: ",v_2.shape," shape ol: ",ol.shape)
                 # print("length of contrastive loss",len(ol))
                 # print(v_1_c[2],v_2[2],ol[2])
-                loss_2 = torch.mean(ol)
+                # loss_2 = torch.mean(ol)
+                loss_2=0
+                for i in range (len(v_1)):
+                    if (torch.norm(v_1[i])>0.5):
+                        loss_2-=criterion_2(torch.unsqueeze(v_2[i],0),torch.unsqueeze(v_1_c[i],0))
+                    else:
+                        loss_2-=0
 
-                loss_2 = 1 - loss_2
+
+                # loss_2 = 1 - loss_2
                 loss = torch.mean(loss) #loss=2.5
-                loss_2=torch.mean(loss_2)
+                # loss_2=torch.mean(loss_2)
+                loss_2=loss_2/len(v_1)
                 # loss_3=torch.mean(loss_3)
                 total_loss=loss+loss_2
                 total_loss.backward()
