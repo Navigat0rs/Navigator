@@ -261,7 +261,7 @@ def train(args, **kwargs):
                 # print(loss,loss_2)
                 # loss_3=torch.mean(loss_3)
                 total_loss=loss+loss_2
-                print(loss,loss_2,total_loss)
+                # print(loss,loss_2,total_loss)
                 total_loss.backward()
                 optimizer.step()
                 step += 1
