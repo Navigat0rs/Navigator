@@ -18,7 +18,7 @@ from metric import compute_ate_rte
 from model_resnet1d import *
 from numpy import linalg as LA
 
-_input_channel, _output_channel = 6, 2
+_input_channel, _output_channel = 4, 2
 _fc_config = {'fc_dim': 512, 'in_dim': 7, 'dropout': 0.5, 'trans_planes': 128}
 
 
@@ -166,7 +166,7 @@ def train(args, **kwargs):
 
     criterion = torch.nn.MSELoss()
     criterion_2=torch.nn.CosineSimilarity(dim=1)
-    criterion_3=torch.nn.MSELoss()
+
     optimizer = torch.optim.Adam(network.parameters(), args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, verbose=True, eps=1e-12)
 
@@ -258,8 +258,10 @@ def train(args, **kwargs):
                 loss = torch.mean(loss) #loss=2.5
                 # loss_2=torch.mean(loss_2)
                 loss_2=loss_2/len(v_1)
+                # print(loss,loss_2)
                 # loss_3=torch.mean(loss_3)
                 total_loss=loss+loss_2
+                print(loss,loss_2,total_loss)
                 total_loss.backward()
                 optimizer.step()
                 step += 1

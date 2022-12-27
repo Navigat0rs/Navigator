@@ -102,8 +102,8 @@ class GlobSpeedSequence(CompiledSequence):
         # print("global_accelation: ",glob_acce)
         start_frame = self.info.get('start_frame', 0)
         self.ts = ts[start_frame:]
-        self.features = np.concatenate([glob_gyro, glob_acce], axis=1)[start_frame:]
-        self.features_contrastive=np.concatenate([glob_gyro_contrastive,glob_acce_contrastive],axis=1)[start_frame:]
+        self.features = np.concatenate([glob_gyro[:-1], glob_acce[:-1]], axis=1)[start_frame:]
+        self.features_contrastive=np.concatenate([glob_gyro_contrastive[:-1],glob_acce_contrastive[:-1]],axis=1)[start_frame:]
 
         # zz=0
         # if (zz!=2):
