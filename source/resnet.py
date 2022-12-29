@@ -2,6 +2,7 @@ import os
 import time
 from os import path as osp
 
+import numpy
 import numpy as np
 import torch
 import json
@@ -17,6 +18,7 @@ from transformations import *
 from metric import compute_ate_rte
 from model_resnet1d import *
 from numpy import linalg as LA
+from scipy.spatial.transform import Rotation as R
 
 _input_channel, _output_channel = 6, 2
 _fc_config = {'fc_dim': 512, 'in_dim': 7, 'dropout': 0.5, 'trans_planes': 128}
@@ -41,23 +43,29 @@ def get_model(arch):
 
 def contrastiveModule(input_arrayy,device):
     # input_array=input_arrayy.cpu()
-    input_array=input_arrayy.clone().detach()
+    input_array=input_arrayy.clone().detach().cpu()
+    input_arrayl=np.concatenate([input_array,np.zeros([input_array.shape[0], 1])], axis=1)
     #TODO: add functionalities for contrastive module
     tensor1 = torch.tensor((), dtype=torch.float32,requires_grad=True,device=device)
     tensor1.new_zeros((len(input_array), len(input_array[0])))
+    q2 = R.from_euler('xyz', [0, 0, 90], degrees=True)
+    input_arraym=q2.apply(input_arrayl)
+    input_array=torch.tensor(input_arraym[:,:-1],device=device)
 
-    for i in range (len(input_array)):
-        w,x,y,z=0.0,input_array[i][0],input_array[i][1],0.0
-        interm=[w,x.tolist(),y.tolist(),z]
-        intermm=[x.tolist(),y.tolist(),z]
-        # print(interm)
-        interm_q=quaternion.from_float_array(interm)
-        # q1=quaternion.from_float_array([0.369969745324723, 0.629673216173061, 0.363760369952464, -0.578197723777012])
-        q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / (2))
-        # print(q1)
-        new_f=q1.rotate(intermm)[:-1]
-        # new_f = quaternion.as_float_array(q1 * interm_q * q1.conj())[1:3]
-        input_array[i]=torch.tensor(new_f,device=device)
+    # for i in range (len(input_array)):
+    #     w,x,y,z=0.0,input_array[i][0],input_array[i][1],0.0
+    #     interm=[w,x.tolist(),y.tolist(),z]
+    #     intermm=[x.tolist(),y.tolist(),z]
+    #     intermmm=np.array(intermm)
+    #     # print(interm)
+    #     interm_q=quaternion.from_float_array(interm)
+    #     # q1=quaternion.from_float_array([0.369969745324723, 0.629673216173061, 0.363760369952464, -0.578197723777012])
+    #     q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / (2))
+    #     q2 = R.from_euler('xyz', [0, 0, 90], degrees=True)
+    #     # print(q1)
+    #     new_f=q1.rotate(intermm)[:-1]
+    #     # new_f = quaternion.as_float_array(q1 * interm_q * q1.conj())[1:3]
+    #     input_array[i]=torch.tensor(new_f,device=device)
 
         # zz=1
         # if (zz!=2):

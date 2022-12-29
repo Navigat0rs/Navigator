@@ -8,6 +8,7 @@ import quaternion
 from scipy.ndimage import gaussian_filter1d
 from torch.utils.data import Dataset
 from pyquaternion import Quaternion
+from scipy.spatial.transform import Rotation as R
 
 from data_utils import CompiledSequence, select_orientation_source, load_cached_sequences
 
@@ -89,15 +90,18 @@ class GlobSpeedSequence(CompiledSequence):
         # print("acce_quaterion: ",acce_q)
         # q1=quaternion.from_float_array([0.369969745324723, 0.629673216173061, 0.363760369952464, -0.578197723777012])
         q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / (2))
+        q2=R.from_euler('xyz',[0,0,90],degrees=True)
         print(q1)
         glob_gyro = quaternion.as_float_array(ori_q * gyro_q * ori_q.conj())[:, 1:]
 
-        glob_gyro_contrastive=[q1.rotate(l1[::]) for l1 in glob_gyro]
+        # glob_gyro_contrastive=[q1.rotate(l1[::]) for l1 in glob_gyro]
+        glob_gyro_contrastive = q2.apply(glob_gyro)
         # glob_gyro_contrastive=quaternion.as_float_array(q1*ori_q*gyro_q*ori_q.conj()*q1.conj())[:,1:]
 
         # print("global_gyro: ",glob_gyro)
         glob_acce = quaternion.as_float_array(ori_q * acce_q * ori_q.conj())[:, 1:]
-        glob_acce_contrastive=[q1.rotate(l2[::]) for l2 in glob_acce]
+        # glob_acce_contrastive=[q1.rotate(l2[::]) for l2 in glob_acce]
+        glob_acce_contrastive = q2.apply(glob_acce)
         # glob_acce_contrastive=quaternion.as_float_array(q1*ori_q * acce_q * ori_q.conj()*q1.conj())[:,1:]
         # print("global_accelation: ",glob_acce)
         start_frame = self.info.get('start_frame', 0)
