@@ -88,7 +88,7 @@ class GlobSpeedSequence(CompiledSequence):
         acce_q = quaternion.from_float_array(np.concatenate([np.zeros([acce.shape[0], 1]), acce], axis=1))
         # print("acce_quaterion: ",acce_q)
         # q1=quaternion.from_float_array([0.369969745324723, 0.629673216173061, 0.363760369952464, -0.578197723777012])
-        q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / (2*45))
+        q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / (2))
         print(q1)
         glob_gyro = quaternion.as_float_array(ori_q * gyro_q * ori_q.conj())[:, 1:]
 

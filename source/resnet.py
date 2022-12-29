@@ -53,7 +53,7 @@ def contrastiveModule(input_arrayy,device):
         # print(interm)
         interm_q=quaternion.from_float_array(interm)
         # q1=quaternion.from_float_array([0.369969745324723, 0.629673216173061, 0.363760369952464, -0.578197723777012])
-        q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / (2*45))
+        q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / (2))
         # print(q1)
         new_f=q1.rotate(intermm)[:-1]
         # new_f = quaternion.as_float_array(q1 * interm_q * q1.conj())[1:3]
