@@ -41,16 +41,17 @@ def get_model(arch):
         raise ValueError('Invalid architecture: ', args.arch)
     return network
 
-def contrastiveModule(input_arrayy,device):
+def contrastiveModule(input_arrayy,random_degrees,device):
     # input_array=input_arrayy.cpu()
     input_array=input_arrayy.clone().detach().cpu()
     input_arrayl=np.concatenate([input_array,np.zeros([input_array.shape[0], 1])], axis=1)
     #TODO: add functionalities for contrastive module
     tensor1 = torch.tensor((), dtype=torch.float32,requires_grad=True,device=device)
     tensor1.new_zeros((len(input_array), len(input_array[0])))
-    q2 = R.from_euler('xyz', [0, 0, 90], degrees=True)
-    input_arraym=q2.apply(input_arrayl)
-    input_array=torch.tensor(input_arraym[:,:-1],device=device)
+    for i in range(len(random_degrees)):
+        q = R.from_euler('xyz', [0, 0, random_degrees[i]], degrees=True)
+        input_arrayl[i]=q.apply(input_arrayl[i])
+    input_array=torch.tensor(input_arrayl[:,:-1],device=device)
 
     # for i in range (len(input_array)):
     #     w,x,y,z=0.0,input_array[i][0],input_array[i][1],0.0
@@ -76,6 +77,24 @@ def contrastiveModule(input_arrayy,device):
     # print(input_array)
 
     return input_array
+
+def featContrastiveModule(feat,device):
+    feat_clone = feat.clone().detach().cpu()
+    feat_xyz=torch.transpose(feat_clone,1,2).numpy()
+    random_degrees=np.random.randint(1,90,feat.shape[0])
+    # feat_numpy=torch_tensor.cpu().detach().numpy()
+    for i in range (feat.shape[0]):
+        q = R.from_euler('xyz', [0, 0, random_degrees[i]], degrees=True)
+        feat_xyz[i][:,0:3]=q.apply(feat_xyz[i][:,0:3])
+        feat_xyz[i][:,3:]=q.apply(feat_xyz[i][:,3:])
+    feat_xyz_tensor=torch.transpose(torch.Tensor(feat_xyz),1,2)
+    output_tensor = torch.tensor(feat_xyz_tensor, device=device)
+    return [output_tensor,random_degrees]
+
+
+
+
+
 
 def run_test(network, data_loader, device, eval_mode=True):
     targets_all = []
@@ -231,8 +250,9 @@ def train(args, **kwargs):
                 #
                 optimizer.zero_grad()
                 v_1 = network(feat)  #in book this is like y=mx+c
-                v_2 = network(feat_c)
-                v_1_c = contrastiveModule(v_1,device)
+                feat_contrast,random_degrees=featContrastiveModule(feat,device)
+                v_2 = network(feat_contrast)
+                v_1_c = contrastiveModule(v_1,random_degrees,device)
                 # v_1_c.to(device)
                 train_outs.append(v_1.cpu().detach().numpy())  #.cpu mean move all the parameters and buffer to the cpu, returning  self
                 train_targets.append(targ.cpu().detach().numpy())
