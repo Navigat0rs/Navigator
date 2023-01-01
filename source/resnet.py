@@ -87,8 +87,8 @@ def featContrastiveModule(feat,device):
         q = R.from_euler('xyz', [0, 0, random_degrees[i]], degrees=True)
         feat_xyz[i][:,0:3]=q.apply(feat_xyz[i][:,0:3])
         feat_xyz[i][:,3:]=q.apply(feat_xyz[i][:,3:])
-    feat_xyz_tensor=torch.transpose(torch.Tensor(feat_xyz),1,2)
-    output_tensor = torch.tensor(feat_xyz_tensor, device=device)
+    feat_xyz_tensor=torch.transpose(torch.Tensor(feat_xyz,device=device),1,2)
+    output_tensor = feat_xyz_tensor
     return [output_tensor,random_degrees]
 
 
@@ -288,7 +288,7 @@ def train(args, **kwargs):
                 loss_2=loss_2/len(v_1)
                 # loss_3=torch.mean(loss_3)
                 total_loss=loss+loss_2
-                total_loss.backward()
+                loss.backward()
                 optimizer.step()
                 step += 1
 
