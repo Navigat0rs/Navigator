@@ -101,7 +101,7 @@ def run_test(network, data_loader, device, eval_mode=True):
     preds_all = []
     if eval_mode:
         network.eval()
-    for bid, (feat, targ,feat_c,targ_c, _, _) in enumerate(data_loader):
+    for bid, (feat, targ, _, _) in enumerate(data_loader):
         pred = network(feat.to(device)).cpu().detach().numpy()
         targets_all.append(targ.detach().numpy())
         preds_all.append(pred)
@@ -193,7 +193,7 @@ def train(args, **kwargs):
 
     criterion = torch.nn.MSELoss()
     criterion_2=torch.nn.CosineSimilarity(dim=1)
-    criterion_3=torch.nn.MSELoss()
+
     optimizer = torch.optim.Adam(network.parameters(), args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.1, patience=10, verbose=True, eps=1e-12)
 
@@ -237,9 +237,9 @@ def train(args, **kwargs):
         for epoch in range(start_epoch, args.epochs):
             start_t = time.time()
             network.train()  #according to my understanding its just change the mode of the network to train mode
-            train_outs, train_targets,v_1_c_all,v_2_all = [], [], [],[]
-            for batch_id, (feat, targ,feat_c,targ_c, _, _) in enumerate(train_loader):
-                feat, targ,feat_c,targ_c = feat.to(device), targ.to(device),feat_c.to(device), targ_c.to(device)
+            train_outs, train_targets = [], []
+            for batch_id, (feat, targ, _, _) in enumerate(train_loader):
+                feat, targ = feat.to(device), targ.to(device)
                 # feat_c=contrastiveModule(feat) #format[[glob_ang_vel_c1,glob_acc_c1],[],...]
 
                 # v_1_c=contrastiveModule(targ)
@@ -251,7 +251,7 @@ def train(args, **kwargs):
                 optimizer.zero_grad()
                 v_1 = network(feat)  #in book this is like y=mx+c
                 feat_contrast,random_degrees=featContrastiveModule(feat,device)
-                v_2 = network(feat_contrast)
+                # v_2 = network(feat_contrast)
                 v_1_c = contrastiveModule(v_1,random_degrees,device)
                 # v_1_c.to(device)
                 train_outs.append(v_1.cpu().detach().numpy())  #.cpu mean move all the parameters and buffer to the cpu, returning  self
@@ -275,11 +275,11 @@ def train(args, **kwargs):
                 # print(v_1_c[2],v_2[2],ol[2])
                 # loss_2 = torch.mean(ol)
                 loss_2=0
-                for i in range (len(v_1)):
-                    if (torch.norm(v_1[i])>0.5):
-                        loss_2-=criterion_2(torch.unsqueeze(v_2[i],0),torch.unsqueeze(v_1_c[i],0))
-                    else:
-                        loss_2-=0
+                # for i in range (len(v_1)):
+                #     if (torch.norm(v_1[i])>0.5):
+                #         loss_2-=criterion_2(torch.unsqueeze(v_2[i],0),torch.unsqueeze(v_1_c[i],0))
+                #     else:
+                #         loss_2-=0
 
 
                 # loss_2 = 1 - loss_2
@@ -287,7 +287,7 @@ def train(args, **kwargs):
                 # loss_2=torch.mean(loss_2)
                 loss_2=loss_2/len(v_1)
                 # loss_3=torch.mean(loss_3)
-                total_loss=loss+loss_2
+                # total_loss=loss+loss_2
                 loss.backward()
                 optimizer.step()
                 step += 1

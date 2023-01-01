@@ -64,8 +64,6 @@ class GlobSpeedSequence(CompiledSequence):
         print("------------Compute the IMU orientation in the Tango coordinate frame------------------------")
         # print("ori: ",ori)
         ori_q = quaternion.from_float_array(ori)
-        # print(type(ori_q))
-        # print("orietation_quaternion: ",ori_q)
         rot_imu_to_tango = quaternion.quaternion(*self.info['start_calibration'])
         # print("Rot_imu_to_tango_quaternion",rot_imu_to_tango)
         init_rotor = init_tango_ori * rot_imu_to_tango * ori_q[0].conj()
@@ -79,9 +77,9 @@ class GlobSpeedSequence(CompiledSequence):
         glob_v = (tango_pos[self.w:] - tango_pos[:-self.w]) / dt
         print(len(ori_q))
         print(len(glob_v))
-        glob_v_q=quaternion.from_float_array(np.concatenate([np.zeros([glob_v.shape[0], 1]), glob_v], axis=1))
-        # glob_v_contrastive=quaternion.as_float_array(ori_q[200:] * glob_v_q * ori_q[200:].conj())[:, 1:]
-        glob_v_contrastive=quaternion.as_float_array(glob_v_q)[:,1:]
+        # glob_v_q=quaternion.from_float_array(np.concatenate([np.zeros([glob_v.shape[0], 1]), glob_v], axis=1))
+        # # glob_v_contrastive=quaternion.as_float_array(ori_q[200:] * glob_v_q * ori_q[200:].conj())[:, 1:]
+        # glob_v_contrastive=quaternion.as_float_array(glob_v_q)[:,1:]
         # print("global_velocity: ", glob_v)
 
         gyro_q = quaternion.from_float_array(np.concatenate([np.zeros([gyro.shape[0], 1]), gyro], axis=1))
@@ -89,25 +87,25 @@ class GlobSpeedSequence(CompiledSequence):
         acce_q = quaternion.from_float_array(np.concatenate([np.zeros([acce.shape[0], 1]), acce], axis=1))
         # print("acce_quaterion: ",acce_q)
         # q1=quaternion.from_float_array([0.369969745324723, 0.629673216173061, 0.363760369952464, -0.578197723777012])
-        q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / (2))
-        q2=R.from_euler('xyz',[0,0,90],degrees=True)
-        print(q1)
+        # q1 = Quaternion(axis=[0, 0, 1], angle=3.14159265 / (2))
+        # q2=R.from_euler('xyz',[0,0,90],degrees=True)
+        # print(q1)
         glob_gyro = quaternion.as_float_array(ori_q * gyro_q * ori_q.conj())[:, 1:]
 
         # glob_gyro_contrastive=[q1.rotate(l1[::]) for l1 in glob_gyro]
-        glob_gyro_contrastive = q2.apply(glob_gyro)
+        # glob_gyro_contrastive = q2.apply(glob_gyro)
         # glob_gyro_contrastive=quaternion.as_float_array(q1*ori_q*gyro_q*ori_q.conj()*q1.conj())[:,1:]
 
         # print("global_gyro: ",glob_gyro)
         glob_acce = quaternion.as_float_array(ori_q * acce_q * ori_q.conj())[:, 1:]
         # glob_acce_contrastive=[q1.rotate(l2[::]) for l2 in glob_acce]
-        glob_acce_contrastive = q2.apply(glob_acce)
+        # glob_acce_contrastive = q2.apply(glob_acce)
         # glob_acce_contrastive=quaternion.as_float_array(q1*ori_q * acce_q * ori_q.conj()*q1.conj())[:,1:]
         # print("global_accelation: ",glob_acce)
         start_frame = self.info.get('start_frame', 0)
         self.ts = ts[start_frame:]
         self.features = np.concatenate([glob_gyro, glob_acce], axis=1)[start_frame:]
-        self.features_contrastive=np.concatenate([glob_gyro_contrastive,glob_acce_contrastive],axis=1)[start_frame:]
+        # self.features_contrastive=np.concatenate([glob_gyro_contrastive,glob_acce_contrastive],axis=1)[start_frame:]
 
         # zz=0
         # if (zz!=2):
@@ -116,7 +114,7 @@ class GlobSpeedSequence(CompiledSequence):
         #         z=2
         # print("-------features: ",self.features)
         self.targets = glob_v[start_frame:, :2]
-        self.targets_contrastive=glob_v_contrastive[start_frame:,:2]
+        # self.targets_contrastive=glob_v_contrastive[start_frame:,:2]
         # print("--------global_targets: ",self.targets)
         self.orientations = quaternion.as_float_array(ori_q)[start_frame:]
         self.gt_pos = tango_pos[start_frame:]
@@ -127,11 +125,11 @@ class GlobSpeedSequence(CompiledSequence):
     def get_target(self):
         return self.targets
 
-    def get_features_contrastive(self):
-        return self.features_contrastive
-
-    def get_targets_contrastive(self):
-        return self.targets_contrastive
+    # def get_features_contrastive(self):
+    #     return self.features_contrastive
+    #
+    # def get_targets_contrastive(self):
+    #     return self.targets_contrastive
 
     def get_aux(self):
         return np.concatenate([self.ts[:, None], self.orientations, self.gt_pos], axis=1)
@@ -211,7 +209,7 @@ class StridedSequenceDataset(Dataset):
         self.data_path = [osp.join(root_dir, data) for data in data_list]
         self.index_map = []
         self.ts, self.orientations, self.gt_pos = [], [], []
-        self.features, self.targets,self.features_contrastive,self.targets_contrastive,aux = load_cached_sequences(
+        self.features, self.targets,aux = load_cached_sequences(
             seq_type, root_dir, data_list, cache_path, interval=self.interval, **kwargs)
         for i in range(len(data_list)):
             self.ts.append(aux[i][:, 0])
@@ -230,13 +228,11 @@ class StridedSequenceDataset(Dataset):
 
         feat = self.features[seq_id][frame_id:frame_id + self.window_size]
         targ = self.targets[seq_id][frame_id]
-        feat_contrastive=self.features_contrastive[seq_id][frame_id:frame_id + self.window_size]
-        targ_contrastive = self.targets_contrastive[seq_id][frame_id]
 
         # if self.transform is not None:
         #     feat, targ,feat_contrastive,targ_contrastive = self.transform(feat, targ,feat_contrastive,targ_contrastive)
 
-        return feat.astype(np.float32).T, targ.astype(np.float32),feat_contrastive.astype(np.float32).T,targ_contrastive.astype(np.float32) ,seq_id, frame_id
+        return feat.astype(np.float32).T, targ.astype(np.float32),seq_id, frame_id
 
     def __len__(self):
         return len(self.index_map)

@@ -52,14 +52,6 @@ class CompiledSequence(ABC):
         pass
 
     @abstractmethod
-    def get_features_contrastive(self):
-        pass
-
-    @abstractmethod
-    def get_targets_contrastive(self):
-        pass
-
-    @abstractmethod
     def get_aux(self):
         pass
 
@@ -88,7 +80,7 @@ def load_cached_sequences(seq_type, root_dir, data_list, cache_path, **kwargs):
                     'aux_dim': seq_type.aux_dim, 'grv_only': str(grv_only)}
             json.dump(info, open(osp.join(cache_path, 'config.json'), 'w'))
 
-    features_all, targets_all,features_contrastive_all,targets_contrastive_all, aux_all = [], [], [],[],[]
+    features_all, targets_all,aux_all = [], [], []
     for i in range(len(data_list)):
         if cache_path is not None and osp.exists(osp.join(cache_path, data_list[i] + '.hdf5')):
             with h5py.File(osp.join(cache_path, data_list[i] + '.hdf5')) as f:
@@ -97,7 +89,7 @@ def load_cached_sequences(seq_type, root_dir, data_list, cache_path, **kwargs):
                 aux = np.copy(f['aux'])
         else:
             seq = seq_type(osp.join(root_dir, data_list[i]), **kwargs)
-            feat, targ,feat_contrastive,targ_contrastive, aux = seq.get_feature(), seq.get_target(),seq.get_features_contrastive(),seq.get_targets_contrastive(), seq.get_aux()
+            feat, targ,aux = seq.get_feature(), seq.get_target(), seq.get_aux()
             print(seq.get_meta())
             if cache_path is not None and osp.isdir(cache_path):
                 with h5py.File(osp.join(cache_path, data_list[i] + '.hdf5'), 'x') as f:
@@ -106,10 +98,8 @@ def load_cached_sequences(seq_type, root_dir, data_list, cache_path, **kwargs):
                     f['aux'] = aux
         features_all.append(feat)
         targets_all.append(targ)
-        features_contrastive_all.append(feat_contrastive)
-        targets_contrastive_all.append(targ_contrastive)
         aux_all.append(aux)
-    return features_all, targets_all,features_contrastive_all,targets_contrastive_all, aux_all
+    return features_all, targets_all, aux_all
 
 
 def select_orientation_source(data_path, max_ori_error=20.0, grv_only=True, use_ekf=True):
