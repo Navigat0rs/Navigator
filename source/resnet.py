@@ -88,8 +88,8 @@ def featContrastiveModule(feat,device):
         feat_xyz[i][:,0:3]=q.apply(feat_xyz[i][:,0:3])
         feat_xyz[i][:,3:]=q.apply(feat_xyz[i][:,3:])
     feat_xyz_tensor=torch.transpose(torch.Tensor(feat_xyz),1,2)
-    output_tensor = torch.Tensor(feat_xyz_tensor,device=device)
-    return [output_tensor,random_degrees]
+    output_tensor = torch.tensor(feat_xyz_tensor.clone().detach(), device=device)
+    return [output_tensor, random_degrees]
 
 
 
